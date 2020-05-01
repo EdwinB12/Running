@@ -10,6 +10,8 @@ Function to read running data in Github Repo 'Running'
 #Import Essential Packages for loading a csv file into Pandas. 
 
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 path = 'C:\\Users\\edwin\\OneDrive\\Documents\\Machine_Learning\\Git_Repos\\Running\\Data\\Running_data.csv'
 df = pd.read_csv(path)
@@ -54,13 +56,60 @@ Run_data['Best Pace'] = Run_data['Best Pace'].str.replace(':','.')
 Run_data['Avg Pace'] = Run_data['Avg Pace'].astype(float)
 Run_data['Best Pace'] = Run_data['Best Pace'].astype(float)
 
+#Saving off original 'Title' column before editing
+Run_data['Orig_Location'] = Run_data['Title']
+#Modifying and tidying 'Title' Label - Change column name to 'Location'. 
+Run_data.rename(columns={'Title': 'Location'},inplace=True)
+#Reduce categories, many are repeats with different spellings, as seen below
+Orig_Locations = Run_data['Location'].value_counts() #18 categories
+#Collect all strings for Wokingham
+Run_data['Location'] = Run_data['Location'].str.replace('Wokingham Running','Wokingham')
+Run_data['Location'] = Run_data['Location'].str.replace('Wokingham - Running','Wokingham')
+Run_data['Location'] = Run_data['Location'].str.replace('Wokingham running','Wokingham')
+#Collect all strings for Woodley
+Run_data['Location'] = Run_data['Location'].str.replace('Woodley Running','Woodley')
+Run_data['Location'] = Run_data['Location'].str.replace('Woodley Other','Woodley')
+Run_data['Location'] = Run_data['Location'].str.replace('Woodley running','Woodley')
+#Collect all strings for TVP
+Run_data['Location'] = Run_data['Location'].str.replace('TVP Running','TVP')
+Run_data['Location'] = Run_data['Location'].str.replace('TVP running','TVP')
+#Shortening Nottingham and Wirral
+Run_data['Location'] = Run_data['Location'].str.replace('Wirral Running','Wirral')
+Run_data['Location'] = Run_data['Location'].str.replace('Nottingham Running','Nottingham')
+#Collect all strings for Erewash
+Run_data['Location'] = Run_data['Location'].str.replace('Erewash Running','Erewash')
+Run_data['Location'] = Run_data['Location'].str.replace('Erewash - Running','Erewash')
+#Collecting All Locations with less than 4 runs (Birkenhead, Reading, Wallingford, Pembrokeshire, La Oliva, Running?)
+Run_data['Location'] = Run_data['Location'].str.replace('Birkenhead Running','Other') 
+Run_data['Location'] = Run_data['Location'].str.replace('Reading Parkrun','Other') 
+Run_data['Location'] = Run_data['Location'].str.replace('Wallingford 10km','Other') 
+Run_data['Location'] = Run_data['Location'].str.replace('Pembrokeshire Running','Other') 
+Run_data['Location'] = Run_data['Location'].str.replace('La Oliva Running','Other') 
+Run_data['Location'] = Run_data['Location'].str.replace('Running','Other', )
+New_Locations = Run_data['Location'].value_counts()
+
 #Converting Date to Datetime: 
 Run_data['Date']= pd.to_datetime(Run_data['Date'],format = '%d/%m/%Y %H:%M')
-#Calculate decimal minutes from 'Time' and add new column called 'Time_dec_min'
-Run_data['Time_dec_min'] = Run_data['Time'].str.split(':').apply(lambda x: ((int(x[0]) * 3600) + (int(x[1])*60) + int(x[2])/60))
 
-print(Run_data.head())
-print(Run_data.dtypes)
+#Calculate decimal minutes from 'Time' and add new column called 'Time_dec_min'
+Run_data['Time_dec_min'] = Run_data['Time'].str.split(':').apply(lambda x: (((int(x[0]) * 3600) + (int(x[1])*60) + int(x[2]))/60))
+
+#Convert Original 'Time' header to a float
+Run_data['Time'] = Run_data['Time'].str.replace(':','')
+Run_data['Time'] = Run_data['Time'].astype(float)
+
+
+#%% Splitting Data
+
+#Create seperate dataframes for 5k runs, more than 5k and less than 5k. 
+Run_5k = Run_data.loc[(Run_data['Distance'] > 4.9) & (Run_data['Distance'] < 5.1)]
+Run_5k_less = Run_data.loc[(Run_data['Distance'] < 4.9)]
+Run_5k_more = Run_data.loc[(Run_data['Distance'] > 5.1)]
+
+#Create Seperate dataframes per Location (if needed)
+Run_5k_Wokingham = Run_5k.loc[(Run_data['Location'].str.match('Wokingham'))]
+Run_5k_Woodley = Run_5k.loc[(Run_data['Location'].str.match('Woodley'))]
+Run_5k_TVP = Run_5k.loc[(Run_data['Location'].str.match('TVP'))]
 
 #%% Data Insights
 
