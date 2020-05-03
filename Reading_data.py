@@ -105,8 +105,9 @@ Run_data['Time'] = Run_data['Time'].astype(float)
 Run_5k = Run_data.loc[(Run_data['Distance'] > 4.9) & (Run_data['Distance'] < 5.1)]
 Run_5k_less = Run_data.loc[(Run_data['Distance'] < 4.9)]
 Run_5k_more = Run_data.loc[(Run_data['Distance'] > 5.1)]
+Run_10k = Run_data.loc[(Run_data['Distance'] > 9.9) & (Run_data['Distance'] < 10.1)]
 
-#Create Seperate dataframes per Location (if needed)
+#Create Seperate dataframes per Location (if needed). This should be done via function!
 Run_5k_Wokingham = Run_5k.loc[(Run_5k['Location'].str.match('Wokingham'))]
 Run_5k_Woodley = Run_5k.loc[(Run_5k['Location'].str.match('Woodley'))]
 Run_5k_TVP = Run_5k.loc[(Run_5k['Location'].str.match('TVP'))]
@@ -114,6 +115,64 @@ Run_5k_Other =  Run_5k.loc[(Run_5k['Location'].str.match('Other'))]
 Run_5k_Nottingham =  Run_5k.loc[(Run_5k['Location'].str.match('Nottingham'))]
 Run_5k_Wirral =  Run_5k.loc[(Run_5k['Location'].str.match('Wirral'))]
 Run_5k_Erewash =  Run_5k.loc[(Run_5k['Location'].str.match('Erewash'))]
+
+#%%  Data Visualisation and Insights
+
+#--------------------- Figure 1 ------------------------
+#Cross plots of user defined variables (non strings only) - Scatter Matrix 
+from pandas.plotting import scatter_matrix
+Run_5k_drop = Run_5k.drop(Run_5k[Run_5k.Avg_HR == 0].index)
+attributes1 = [ 'Avg_HR', 'Calories', 'Time_dec_min', 'Avg_Run_Cadence']
+scatter_matrix(Run_5k_drop[attributes1])
+
+#--------------------- Figure 2 ------------------------
+#Correlation Matrix - Best to view in Variable Explorer
+corr_matrix = Run_data.corr() 
+corr_matrix_5k = Run_5k.corr()
+import seaborn as sns
+sns.heatmap(corr_matrix, center=0, cmap='magma', vmin=-1, vmax=1)
+plt.title('Correlation Matrix for All Runs')
+plt.figure()
+sns.heatmap(corr_matrix_5k, center=0, cmap='magma', vmin=-1, vmax=1)
+plt.title('Correlation Matrix for All 5K Runs')
+
+#--------------------- Figure 3 ------------------------
+#Function to Cross-Plot any chosen variable with locations coloured
+# Requires dictionary to provide location and respective color
+a = {'Wokingham':'red','Woodley':'blue','TVP':'green','Other':'orange','Nottingham':'black','Wirral':'purple','Erewash':'yellow'}
+
+def Cross_Plotter_Color(df,var1,var2,Loc_dict): 
+    df = df.drop(df[df.Avg_HR == 0].index) #drops zero values (relies on Avg_HR header being 0)
+    fig,ax = plt.subplots(figsize=(16,12))
+    s = 30 # Marker size
+    m = 'o' # Marker shape
+    ec='black' # Marker outline color
+    for x,y in Loc_dict.items():
+        tmp_df = df.loc[(df['Location'].str.match(x))]
+        ax.scatter(tmp_df[var1],tmp_df[var2],c = y, label = x, s=s, marker=m, edgecolors=ec )
+        
+    plt.xlabel(var1)
+    plt.ylabel(var2)
+    ax.legend()
+    plt.show()
+
+#--------------------- Figure 4 ------------------------
+#Function to cross plot any two variables of choice
+def Cross_Plotter(df,var1,var2):
+    df = df.drop(df[df.Avg_HR == 0].index)
+    fig,ax = plt.subplots(figsize=(12,8))
+    ax.scatter(df[var1],df[var2])
+    plt.xlabel(var1)
+    plt.ylabel(var2)
+    plt.show()
+
+
+
+
+
+
+
+
 
 
 
