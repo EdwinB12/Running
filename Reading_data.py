@@ -140,12 +140,10 @@ plt.figure()
 sns.heatmap(corr_matrix_5k, center=0, cmap='magma', vmin=-1, vmax=1)
 plt.title('Correlation Matrix for All 5K Runs')
 
-
 #--------------------- Figure 3 ------------------------
 # Function to Cross-Plot any chosen variable with locations coloured
 # Requires dictionary to provide location and respective color
 a = {'Wokingham':'red','Woodley':'blue','TVP':'green','Other':'orange','Nottingham':'black','Wirral':'purple','Erewash':'yellow'}
-
 def Cross_Plotter_Color(df,var1,var2,Loc_dict): 
     df = df.drop(df[df.Avg_HR == 0].index) #drops zero values (relies on Avg_HR header being 0)
     fig,ax = plt.subplots(figsize=(16,12))
@@ -172,21 +170,19 @@ def Cross_Plotter(df,var1,var2):
     plt.show()
 
 #--------------------- Figure 5 ------------------------
-# Function to plot pie chart of days of the week spent running
-    
-def Day_Pie(df):
-    day_cnt = df.Day.value_counts() # Count number of each day
+#Function to plot pie plot of any variable
+def Pie_plot(df, var):
+    day_cnt = df[var].value_counts() # Count number of each day
     day_cnt_dict = dict(day_cnt) 
     labels = list(day_cnt_dict.keys()) # Creating a list from the dictionary keys
-    fig,ax = plt.subplots(figsize=(8,8))
+    fig,ax = plt.subplots(figsize=(12,12))
     ax.pie(day_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%')
     plt.show()
 
 #--------------------- Figure 6 ------------------------
-# Function to plot pie chart of days of the week spent running
-
-def Day_Pie_explode(df):
-    day_cnt = df.Day.value_counts() # Count number of each day
+# Function to plot pie chart of any variable - explodes the largest portion of the pie
+def Day_Pie_explode(df,var1):
+    day_cnt = df[var1].value_counts() # Count number of each day
     day_cnt_dict = dict(day_cnt) 
     labels = list(day_cnt_dict.keys()) # Creating a list from the dictionary keys
     day_cnt_np = day_cnt.to_numpy()
@@ -199,5 +195,5 @@ def Day_Pie_explode(df):
     #plt.title('Days of the Week - All Runs')
     plt.show()
 
-
+#%%--------------------- Figure 7 ------------------------
 
