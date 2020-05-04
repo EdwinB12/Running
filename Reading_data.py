@@ -8,7 +8,6 @@ Function to read running data in Github Repo 'Running'
 """
 
 #Importing required modules
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,6 +21,7 @@ Run_data = Run_data[['Distance', 'Date', 'Title', 'Calories','Time', 'Avg HR', '
 Run_data.rename(columns={'Title': 'Location', 'Avg HR':'Avg_HR', 'Max HR':'Max_HR', 'Aerobic TE':'Aerobic_TE', 'Avg Run Cadence':'Avg_Run_Cadence','Max Run Cadence':'Max_Run_Cadence','Avg Pace':'Avg_Pace', 'Best Pace':'Best_Pace', 'Elev Gain':'Elev_Gain','Elev Loss':'Elev_Loss', 'Avg Stride Length':'Avg_Stride_Length'},inplace=True)
 
 #%% Initial Data QC
+#Simple function quickly perform many of the straight forward QC's on a dataframe
 def Initial_Data_QC(df): 
     print('\n', 'shape:' , df.shape, '\n')
     print('Columns:', df.columns,'\n' )
@@ -88,7 +88,6 @@ Run_data['Location'] = Run_data['Location'].str.replace('Pembrokeshire Running',
 Run_data['Location'] = Run_data['Location'].str.replace('La Oliva Running','Other') 
 Run_data['Location'] = Run_data['Location'].str.replace('Running','Other', )
 
-
 #Converting Date to Datetime: 
 Run_data['Date']= pd.to_datetime(Run_data['Date'],format = '%d/%m/%Y %H:%M')
 #Adding day of the week column
@@ -119,16 +118,16 @@ Run_5k_Nottingham =  Run_5k.loc[(Run_5k['Location'].str.match('Nottingham'))]
 Run_5k_Wirral =  Run_5k.loc[(Run_5k['Location'].str.match('Wirral'))]
 Run_5k_Erewash =  Run_5k.loc[(Run_5k['Location'].str.match('Erewash'))]
 
-#%%  Data Visualisation and Insights
+#%%  Functions for plotting data
 
-#--------------------- Figure 1 ------------------------
+#--------------------- Function 1 ------------------------
 # Cross plots of user defined variables (non strings only) - Scatter Matrix 
 from pandas.plotting import scatter_matrix
 Run_5k_drop = Run_5k.drop(Run_5k[Run_5k.Avg_HR == 0].index)
 attributes1 = [ 'Avg_HR', 'Calories', 'Time_dec_min', 'Avg_Run_Cadence']
 scatter_matrix(Run_5k_drop[attributes1])
 
-#--------------------- Figure 2 ------------------------
+#--------------------- Function 2 ------------------------
 # Correlation Matrix - Best to view in Variable Explorer
 corr_matrix = Run_data.corr() 
 corr_matrix_5k = Run_5k.corr()
@@ -140,60 +139,101 @@ plt.figure()
 sns.heatmap(corr_matrix_5k, center=0, cmap='magma', vmin=-1, vmax=1)
 plt.title('Correlation Matrix for All 5K Runs')
 
-#--------------------- Figure 3 ------------------------
+#--------------------- Function 3 ------------------------
 # Function to Cross-Plot any chosen variable with locations coloured
-# Requires dictionary to provide location and respective color
-a = {'Wokingham':'red','Woodley':'blue','TVP':'green','Other':'orange','Nottingham':'black','Wirral':'purple','Erewash':'yellow'}
-def Cross_Plotter_Color(df,var1,var2,Loc_dict): 
+# Requires dictionary to provide color variable
+#a = {'Wokingham':'red','Woodley':'blue','TVP':'green','Other':'orange','Nottingham':'black','Wirral':'purple','Erewash':'yellow'}
+#a = {'Monday':'red','Tuesday':'blue','Wednesday':'green','Thursday':'orange','Friday':'black','Saturday':'purple','Sunday':'yellow'}
+def Cross_Plotter_Color(df,var1,var2,var3,var3_dict,fig,ax): 
     df = df.drop(df[df.Avg_HR == 0].index) #drops zero values (relies on Avg_HR header being 0)
-    fig,ax = plt.subplots(figsize=(16,12))
     s = 30 # Marker size
     m = 'o' # Marker shape
     ec='black' # Marker outline color
-    for x,y in Loc_dict.items():
-        tmp_df = df.loc[(df['Location'].str.match(x))]
+    for x,y in var3_dict.items(): # Loops through supplied dictionary to access both the variable and its repective color
+        tmp_df = df.loc[(df[var3].str.match(x))]
         ax.scatter(tmp_df[var1],tmp_df[var2],c = y, label = x, s=s, marker=m, edgecolors=ec )
         
     plt.xlabel(var1)
     plt.ylabel(var2)
     ax.legend()
-    plt.show()
+  
 
-#--------------------- Figure 4 ------------------------
+#--------------------- Function 4 ------------------------
 # Function to cross plot any two variables of choice
-def Cross_Plotter(df,var1,var2):
+def Cross_Plotter(df,var1,var2, fig, ax):
     df = df.drop(df[df.Avg_HR == 0].index)
-    fig,ax = plt.subplots(figsize=(12,8))
-    ax.scatter(df[var1],df[var2])
-    plt.xlabel(var1)
-    plt.ylabel(var2)
-    plt.show()
+    ax.scatter(df[var1],df[var2] )
+    ax.set_xlabel(var1)
+    ax.set_ylabel(var2)
 
-#--------------------- Figure 5 ------------------------
+#--------------------- Function 5 ------------------------
 #Function to plot pie plot of any variable
-def Pie_plot(df, var):
-    day_cnt = df[var].value_counts() # Count number of each day
-    day_cnt_dict = dict(day_cnt) 
+def Pie_plot(df, var,fig,ax):
+    var_cnt = df[var].value_counts() # Counts number of each variable for plotting
+    var_cnt_dict = dict(day_cnt) # Convert from pandas series to dictionary
     labels = list(day_cnt_dict.keys()) # Creating a list from the dictionary keys
-    fig,ax = plt.subplots(figsize=(12,12))
-    ax.pie(day_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%')
-    plt.show()
+    ax.pie(var_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%')
+    
 
-#--------------------- Figure 6 ------------------------
+#--------------------- Function 6 ------------------------
 # Function to plot pie chart of any variable - explodes the largest portion of the pie
-def Day_Pie_explode(df,var1):
-    day_cnt = df[var1].value_counts() # Count number of each day
-    day_cnt_dict = dict(day_cnt) 
-    labels = list(day_cnt_dict.keys()) # Creating a list from the dictionary keys
-    day_cnt_np = day_cnt.to_numpy()
-    explode = np.zeros(len(day_cnt))
-    ei = np.where(day_cnt_np == np.amax(day_cnt_np))
-    explode[ei] = 0.2
-    #explode=(0.2,0,0,0,0,0,0) 
-    fig,ax = plt.subplots(figsize=(8,8))
-    ax.pie(day_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%', explode=explode)
-    #plt.title('Days of the Week - All Runs')
-    plt.show()
+def Pie_explode(df,var1,fig,ax):
+    var_cnt = df[var1].value_counts() # Counts number of each variable for plotting
+    var_cnt_dict = dict(var_cnt) # Convert from pandas series to dictionary
+    labels = list(var_cnt_dict.keys()) # Creating a list from the dictionary keys
+    var_cnt_np = var_cnt.to_numpy() #Creates numpy array of variable counts
+    explode = np.zeros(len(var_cnt)) #Initalises array of zeros for explosion array
+    ei = np.where(var_cnt_np == np.amax(var_cnt_np)) #Finds where the largest pie slice is
+    explode[ei] = 0.2 # add 0.2 to the zero matrix to explode largest segment
+    ax.pie(var_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%', explode=explode)
 
-#%%--------------------- Figure 7 ------------------------
+#--------------------- Function 7 ------------------------
+
+#%% Creating Plots for Summary
+
+# --------------------- Figure 1 ---------------------------
+#Subplot of Date vs Distance and Date vs Time for opening figure. 
+    
+figure,(ax1,ax2) = plt.subplots(1,2, figsize=(18,12))
+Cross_Plotter(Run_data, 'Date', 'Distance',figure,ax1)
+Cross_Plotter(Run_data, 'Date', 'Time_dec_min',figure,ax2)
+ax1.set_title('All Runs: Date vs Distance')
+ax2.set_title('All Runs: Date vs Time (Decimal Minutes)')
+plt.show()
+
+# --------------------- Figure 2 ---------------------------
+# Exploding pie plot of locations across all data
+
+fig, ax = plt.subplots( figsize=(8,8))
+Pie_explode(Run_data, 'Location', fig, ax)
+ax.set_title('Running Locations')
+
+# ----------------------- Figure 3 ---------------------------
+#Plotting Color scatter plot of all the different Locations
+fig, ax = plt.subplots( figsize=(12,8))
+a = {'Wokingham':'red','Woodley':'blue','TVP':'green','Other':'orange','Nottingham':'black','Wirral':'purple','Erewash':'yellow'}
+Cross_Plotter_Color(Run_data, 'Date', 'Time_dec_min', 'Location', a, fig, ax)
+ax.set_ylim(0,100)
+ax.set_title('Date vs Time (decimal minutes) - Location Coloured')
+
+# --------------------- Figure 4 ---------------------------
+#Exploding pie plot of days of the week ran across all data
+
+fig, (ax1,ax2) = plt.subplots(1,2,figsize=(20,12))
+Pie_explode(Run_data, 'Day', fig, ax1)
+ax1.set_title('Days of the Week')
+a = {'Monday':'red','Tuesday':'blue','Wednesday':'green','Thursday':'orange','Friday':'black','Saturday':'purple','Sunday':'yellow'}
+Cross_Plotter_Color(Run_data,'Date', 'Time_dec_min', 'Day', a, fig,ax2)
+ax2.set_ylim(0,100)
+ax2.set_title('Date vs Time (decimal minutes)')
+
+# ----------------------Figure 5 --------------------------
+
+fig, ax = plt.subplots( figsize=(12,8))
+a = {'Wokingham':'red','Woodley':'blue','TVP':'green','Other':'orange','Nottingham':'black','Wirral':'purple','Erewash':'yellow'}
+Cross_Plotter_Color(Run_5k, 'Date', 'Time_dec_min', 'Location', a, fig, ax)
+ax.set_title('Date vs Time (decimal minutes) - Location Coloured')
+
+# ---------------------- Figure 6 -------------------------
+
 
