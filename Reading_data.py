@@ -170,8 +170,8 @@ def Cross_Plotter(df,var1,var2, fig, ax):
 #Function to plot pie plot of any variable
 def Pie_plot(df, var,fig,ax):
     var_cnt = df[var].value_counts() # Counts number of each variable for plotting
-    var_cnt_dict = dict(day_cnt) # Convert from pandas series to dictionary
-    labels = list(day_cnt_dict.keys()) # Creating a list from the dictionary keys
+    var_cnt_dict = dict(var_cnt) # Convert from pandas series to dictionary
+    labels = list(var_cnt_dict.keys()) # Creating a list from the dictionary keys
     ax.pie(var_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%')
     
 
@@ -189,7 +189,7 @@ def Pie_explode(df,var1,fig,ax):
 
 #--------------------- Function 7 ------------------------
 
-#%% Creating Plots for Summary
+#%% Creating Plots for Summary - 5k Runs
 
 # --------------------- Figure 1 ---------------------------
 #Subplot of Date vs Distance and Date vs Time for opening figure. 
@@ -235,5 +235,77 @@ Cross_Plotter_Color(Run_5k, 'Date', 'Time_dec_min', 'Location', a, fig, ax)
 ax.set_title('Date vs Time (decimal minutes) - Location Coloured')
 
 # ---------------------- Figure 6 -------------------------
+print(corr_matrix_5k['Time_dec_min'].sort_values(ascending=False)) #Find linear correlations
+#Plot 4 apparent positive correlations
+fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (12,7))
+Cross_Plotter(Run_5k, 'Avg_Pace', 'Time_dec_min', fig, ax1)
+Cross_Plotter(Run_5k, 'Best_Pace', 'Time_dec_min', fig, ax2)
+Cross_Plotter(Run_5k, 'Calories', 'Time_dec_min', fig, ax3)
+Cross_Plotter(Run_5k, 'Elev_Loss', 'Time_dec_min', fig, ax4)
+fig.suptitle('Four variables cross plotted against Time for 5K Runs', fontsize = 16)
+plt.show()
+
+# ---------------------- Figure 7 -------------------------
+#Plot 4 correlations either negative or no correlation
+fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (12,7))
+Cross_Plotter(Run_5k, 'Avg_HR', 'Time_dec_min', fig, ax1)
+Cross_Plotter(Run_5k, 'Max_HR', 'Time_dec_min', fig, ax2)
+Cross_Plotter(Run_5k, 'Avg_Run_Cadence', 'Time_dec_min', fig, ax3)
+Cross_Plotter(Run_5k, 'Avg_Stride_Length', 'Time_dec_min', fig, ax4)
+fig.suptitle('Four variables cross plotted against Time for 5K Runs', fontsize = 16)
+plt.show()
+
+#%% Section for calculating and printing general statistics which may be interesting
+#Function to change decimal minutes to Minutes and seconds: 
+def DecMins_to_MinSecs(dm):
+    minute = dm - dm%1
+    sec =  round((((dm%1)/100)*60),2)
+    return minute+sec
+
+#Function to express a time as a string saying x minutes and y seconds (e.g. 5.57 = 5 mins and 57 secs)
+def DecMins_to_MinSecs_str(dm):
+    minute = dm - dm%1
+    sec =  round((((dm%1)/100)*60),2)
+    sec_str = str(sec).split('.')[1]
+    Min_str = str(minute).split('.')[0]
+    MinSec_Str = Min_str + ' minutes' + ' and ' + sec_str + ' seconds' 
+    return MinSec_Str
+    
+    
+#Calculating some general statistics: 
+#1. Total 5k running improvement from Slowest to Quickest
+print('Difference between slowest and quickest 5k run:' , DecMins_to_MinSecs_str(Run_5k.Time_dec_min.max() - Run_5k.Time_dec_min.min()))
+
+#2. Total 5k running improvement from Slowest to Quickest (discarding La Oliva run)
+#Remove La Oliva run
+Run_5k_no_Oliva = Run_5k.drop(Run_5k[Run_5k.Orig_Location.str.match('La Oliva')].index)
+print('Difference between slowest and quickest 5k run (discard La Oliva):' ,DecMins_to_MinSecs_str(Run_5k_no_Oliva.Time_dec_min.max() - Run_5k_no_Oliva.Time_dec_min.min()))
+
+#3. Total 5k time difference between Earliest Date and Latest Date
+#Find times run at earliest and latest dates available
+Earliest_time = Run_5k.loc[(Run_5k['Date'] == Run_5k.Date.min())].Time_dec_min
+Latest_time = Run_5k.loc[(Run_5k['Date'] == Run_5k.Date.max())].Time_dec_min
+Time_diff = Earliest_time.values[0] - Latest_time.values[0]
+print('Difference between earliest and latest date:' , DecMins_to_MinSecs_str(Time_diff))
+
+#4. Total 5k time difference between Slowest and Quickest at Wokingham 
+Wokingham_Quick = Run_5k.loc[(Run_5k['Location'].str.match('Wokingham'))].Time_dec_min.min()
+Wokingham_Slow = Run_5k.loc[(Run_5k['Location'].str.match('Wokingham'))].Time_dec_min.max()
+print('Time improvement at Wokingham is:', DecMins_to_MinSecs_str(Wokingham_Slow - Wokingham_Quick))
+
+#5. PB 5k time
+print('5k PB is:', DecMins_to_MinSecs_str(Run_5k.Time_dec_min.min()))
+
+#%% Creating Plots for Summary - 10k Runs
+
+
+
+
+
+
+
+
+
+
 
 
