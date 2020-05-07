@@ -90,6 +90,9 @@ Run_data['Location'] = Run_data['Location'].str.replace('Running','Other', )
 
 #Converting Date to Datetime: 
 Run_data['Date']= pd.to_datetime(Run_data['Date'],format = '%d/%m/%Y %H:%M')
+#Creating 'Delta Day' column. This is the number of days since the first date in the dataframe.  
+basedate = Run_data.Date.min()
+Run_data['Delta_Day'] = (Run_data['Date']-basedate).dt.days
 #Adding day of the week column
 Run_data['Day'] = Run_data.Date.dt.day_name()
 
@@ -108,15 +111,6 @@ Run_5k = Run_data.loc[(Run_data['Distance'] > 4.9) & (Run_data['Distance'] < 5.1
 Run_5k_less = Run_data.loc[(Run_data['Distance'] < 4.9)]
 Run_5k_more = Run_data.loc[(Run_data['Distance'] > 5.1)]
 Run_10k = Run_data.loc[(Run_data['Distance'] > 9.9) & (Run_data['Distance'] < 10.1)]
-
-#Create Seperate dataframes per Location (if needed). This should be done via function!
-Run_5k_Wokingham = Run_5k.loc[(Run_5k['Location'].str.match('Wokingham'))]
-Run_5k_Woodley = Run_5k.loc[(Run_5k['Location'].str.match('Woodley'))]
-Run_5k_TVP = Run_5k.loc[(Run_5k['Location'].str.match('TVP'))]
-Run_5k_Other =  Run_5k.loc[(Run_5k['Location'].str.match('Other'))]
-Run_5k_Nottingham =  Run_5k.loc[(Run_5k['Location'].str.match('Nottingham'))]
-Run_5k_Wirral =  Run_5k.loc[(Run_5k['Location'].str.match('Wirral'))]
-Run_5k_Erewash =  Run_5k.loc[(Run_5k['Location'].str.match('Erewash'))]
 
 #%%  Functions for plotting data
 
@@ -156,7 +150,7 @@ def Cross_Plotter_Color(df,var1,var2,var3,var3_dict,fig,ax):
     plt.xlabel(var1)
     plt.ylabel(var2)
     ax.legend()
-  
+    pass
 
 #--------------------- Function 4 ------------------------
 # Function to cross plot any two variables of choice
@@ -165,7 +159,7 @@ def Cross_Plotter(df,var1,var2, fig, ax):
     ax.scatter(df[var1],df[var2] )
     ax.set_xlabel(var1)
     ax.set_ylabel(var2)
-
+    pass
 #--------------------- Function 5 ------------------------
 #Function to plot pie plot of any variable
 def Pie_plot(df, var,fig,ax):
@@ -173,7 +167,7 @@ def Pie_plot(df, var,fig,ax):
     var_cnt_dict = dict(var_cnt) # Convert from pandas series to dictionary
     labels = list(var_cnt_dict.keys()) # Creating a list from the dictionary keys
     ax.pie(var_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%')
-    
+    pass
 
 #--------------------- Function 6 ------------------------
 # Function to plot pie chart of any variable - explodes the largest portion of the pie
@@ -186,9 +180,16 @@ def Pie_explode(df,var1,fig,ax):
     ei = np.where(var_cnt_np == np.amax(var_cnt_np)) #Finds where the largest pie slice is
     explode[ei] = 0.2 # add 0.2 to the zero matrix to explode largest segment
     ax.pie(var_cnt,labels=labels,shadow=True, startangle=90,autopct='%1i%%', explode=explode)
-
+    pass
 #--------------------- Function 7 ------------------------
-
+# Plot Best fit line of user defined order onto defined figure and axis. 
+def Add_BestFitLine(df,x,y,order,fig,ax): 
+    X = df[x].to_numpy() # Changing dataframe series to numpy arrays
+    Y = df[y].to_numpy()
+    Coeff= np.polyfit(X,Y,order) # Calculating coeffecients
+    P =  np.poly1d(Coeff) 
+    ax.plot(X,P(X),ls='--',color='black') # Plotting function against X
+    return Coeff # Returns coeffecients
 #%% Creating Plots for Summary - 5k Runs
 
 # --------------------- Figure 1 ---------------------------
@@ -255,6 +256,22 @@ Cross_Plotter(Run_5k, 'Avg_Stride_Length', 'Time_dec_min', fig, ax4)
 fig.suptitle('Four variables cross plotted against Time for 5K Runs', fontsize = 16)
 plt.show()
 
+#%% --------------------- Figure 8 -------------------------
+#Delta Day vs Time - Different order best fit Lines
+fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (18,12))
+Cross_Plotter(Run_5k, 'Delta_Day', 'Time_dec_min', fig, ax1)
+Cross_Plotter(Run_5k, 'Delta_Day', 'Time_dec_min', fig, ax2)
+Cross_Plotter(Run_5k, 'Delta_Day', 'Time_dec_min', fig, ax3)
+Cross_Plotter(Run_5k, 'Delta_Day', 'Time_dec_min', fig, ax4)
+p1 = Add_BestFitLine(Run_5k, 'Delta_Day', 'Time_dec_min', 1, fig, ax1)
+p2 = Add_BestFitLine(Run_5k, 'Delta_Day', 'Time_dec_min', 2, fig, ax2)
+p3 = Add_BestFitLine(Run_5k, 'Delta_Day', 'Time_dec_min', 3, fig, ax3)
+p20 = Add_BestFitLine(Run_5k, 'Delta_Day', 'Time_dec_min', 20, fig, ax4)
+ax1.set_title('Order = 1', fontsize = 12)
+ax2.set_title('Order = 2', fontsize = 12)
+ax3.set_title('Order = 3', fontsize = 12)
+ax4.set_title('Order = 20', fontsize = 12)
+
 #%% Section for calculating and printing general statistics which may be interesting
 #Function to change decimal minutes to Minutes and seconds: 
 def DecMins_to_MinSecs(dm):
@@ -297,6 +314,8 @@ print('Time improvement at Wokingham is:', DecMins_to_MinSecs_str(Wokingham_Slow
 print('5k PB is:', DecMins_to_MinSecs_str(Run_5k.Time_dec_min.min()))
 
 #%% Creating Plots for Summary - 10k Runs
+
+
 
 
 
