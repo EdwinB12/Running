@@ -125,6 +125,7 @@ scatter_matrix(Run_5k_drop[attributes1])
 # Correlation Matrix - Best to view in Variable Explorer
 corr_matrix = Run_data.corr() 
 corr_matrix_5k = Run_5k.corr()
+corr_matrix_10k = Run_10k.corr()
 import seaborn as sns
 plt.figure()
 sns.heatmap(corr_matrix, center=0, cmap='magma', vmin=-1, vmax=1)
@@ -256,7 +257,7 @@ Cross_Plotter(Run_5k, 'Avg_Stride_Length', 'Time_dec_min', fig, ax4)
 fig.suptitle('Four variables cross plotted against Time for 5K Runs', fontsize = 16)
 plt.show()
 
-#%% --------------------- Figure 8 -------------------------
+# --------------------- Figure 8 -------------------------
 #Delta Day vs Time - Different order best fit Lines
 fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (18,12))
 Cross_Plotter(Run_5k, 'Delta_Day', 'Time_dec_min', fig, ax1)
@@ -272,7 +273,7 @@ ax2.set_title('Order = 2', fontsize = 12)
 ax3.set_title('Order = 3', fontsize = 12)
 ax4.set_title('Order = 20', fontsize = 12)
 
-#%% Section for calculating and printing general statistics which may be interesting
+#%% Section for calculating and printing general statistics which may be interesting - 5K
 #Function to change decimal minutes to Minutes and seconds: 
 def DecMins_to_MinSecs(dm):
     minute = dm - dm%1
@@ -314,13 +315,67 @@ print('Time improvement at Wokingham is:', DecMins_to_MinSecs_str(Wokingham_Slow
 print('5k PB is:', DecMins_to_MinSecs_str(Run_5k.Time_dec_min.min()))
 
 #%% Creating Plots for Summary - 10k Runs
+#Manually change some location labels before plotting
+Run_10k['Location'] = Run_10k['Location'].str.replace('Other','Wallingford')
 
+# ---------- Figure 1 ----------------
+#Plotting Date vs Time coloured by Location. 
+fig, ax = plt.subplots( figsize=(12,8))
+Locs = {'Wokingham':'red','Wallingford':'green'} # Note there is a 'Woodley' run in the df but it is missing data for other features and is therefore discarded
+Cross_Plotter_Color(Run_10k, 'Date', 'Time_dec_min', 'Location', Locs, fig, ax)
+ax.set_title('Date vs Time (decimal minutes) - Location Coloured')
 
+# ----------- Figure 2 ----------------
+print(corr_matrix_10k['Time_dec_min'].sort_values(ascending=False)) #Find linear correlations
+#Plot 4 apparent positive correlations
+fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (12,7))
+Cross_Plotter(Run_10k, 'Avg_Pace', 'Time_dec_min', fig, ax1)
+Cross_Plotter(Run_10k, 'Best_Pace', 'Time_dec_min', fig, ax2)
+Cross_Plotter(Run_10k, 'Calories', 'Time_dec_min', fig, ax3)
+Cross_Plotter(Run_10k, 'Elev_Loss', 'Time_dec_min', fig, ax4)
+fig.suptitle('Four variables cross plotted against Time for 10k Runs', fontsize = 16)
+plt.show()
 
+# ---------------------- Figure 3 -------------------------
+#Plot 4 correlations either negative or no correlation
+fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (12,7))
+Cross_Plotter(Run_10k, 'Avg_HR', 'Time_dec_min', fig, ax1)
+Cross_Plotter(Run_10k, 'Max_HR', 'Time_dec_min', fig, ax2)
+Cross_Plotter(Run_10k, 'Avg_Run_Cadence', 'Time_dec_min', fig, ax3)
+Cross_Plotter(Run_10k, 'Avg_Stride_Length', 'Time_dec_min', fig, ax4)
+fig.suptitle('Four variables cross plotted against Time for 10K Runs', fontsize = 16)
+plt.show()
 
+# --------------------- Figure 4 -------------------------
+#Delta Day vs Time - Different order best fit Lines
+fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (18,12))
+Cross_Plotter(Run_10k, 'Delta_Day', 'Time_dec_min', fig, ax1)
+Cross_Plotter(Run_10k, 'Delta_Day', 'Time_dec_min', fig, ax2)
+Cross_Plotter(Run_10k, 'Delta_Day', 'Time_dec_min', fig, ax3)
+Cross_Plotter(Run_10k, 'Delta_Day', 'Time_dec_min', fig, ax4)
+p1 = Add_BestFitLine(Run_10k, 'Delta_Day', 'Time_dec_min', 1, fig, ax1)
+p2 = Add_BestFitLine(Run_10k, 'Delta_Day', 'Time_dec_min', 2, fig, ax2)
+p3 = Add_BestFitLine(Run_10k, 'Delta_Day', 'Time_dec_min', 3, fig, ax3)
+p20 = Add_BestFitLine(Run_10k, 'Delta_Day', 'Time_dec_min', 20, fig, ax4)
+ax1.set_title('Order = 1', fontsize = 12)
+ax2.set_title('Order = 2', fontsize = 12)
+ax3.set_title('Order = 3', fontsize = 12)
+ax4.set_title('Order = 20', fontsize = 12)
 
+#%% Section for calculating and printing general statistics which may be interesting - 10k
+#Calculating some general statistics: 
+#1. Total 10k running improvement from Slowest to Quickest
+print('Difference between slowest and quickest 10k run:' , DecMins_to_MinSecs_str(Run_10k.Time_dec_min.max() - Run_10k.Time_dec_min.min()))
 
+#2. Total 10k time difference between Earliest Date and Latest Date
+#Find times run at earliest and latest dates available
+Earliest_time = Run_10k.loc[(Run_10k['Date'] == Run_10k.Date.min())].Time_dec_min
+Latest_time = Run_10k.loc[(Run_10k['Date'] == Run_10k.Date.max())].Time_dec_min
+Time_diff = Earliest_time.values[0] - Latest_time.values[0]
+print('Difference between earliest and latest date:' , DecMins_to_MinSecs_str(Time_diff))
 
+#3. PB 10k time
+print('10k PB is:', DecMins_to_MinSecs_str(Run_10k.Time_dec_min.min()))
 
 
 
