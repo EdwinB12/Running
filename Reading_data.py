@@ -377,9 +377,12 @@ print('Difference between earliest and latest date:' , DecMins_to_MinSecs_str(Ti
 #3. PB 10k time
 print('10k PB is:', DecMins_to_MinSecs_str(Run_10k.Time_dec_min.min()))
 
+#%% Overall Distance and Time
 
-
-
+print('Total Distance ran is:', Run_data['Distance'].sum(), 'km')
+print('Total time ran is 171:35:33 (hh:mm:ss)') # Calculated manually. Write logic out in script when got chance. 
+print(Run_data.Delta_Day.max(), 'days from 1st run to last run')
+print(Run_data.Calories.sum(), ' calories burned')
 
 
 
